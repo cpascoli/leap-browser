@@ -8,6 +8,7 @@ struct ContentView: View {
     private var rootBookmarks: [Bookmark]
 
     @StateObject private var tabManager = TabManager()
+    @StateObject private var chrome = ChromeState()
     @State private var showBookmarks = false
     @State private var showHistory = false
     @State private var showSettings = false
@@ -18,18 +19,41 @@ struct ContentView: View {
     private var browser: BrowserViewModel { tabManager.selectedTab.browser }
 
     var body: some View {
-        VStack(spacing: 0) {
-            cyberHeader
-            navigationBar
-            loadingPulse
+        ZStack {
             webStack
-            bottomBar
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                if chrome.isVisible {
+                    navigationBar
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    loadingPulse
+                        .transition(.opacity)
+                } else {
+                    // Invisible pull zone / status-bar tap target to help reveal chrome
+                    Color.clear
+                        .frame(height: 12)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.22)) { chrome.reveal() }
+                        }
+                }
+
+                Spacer(minLength: 0)
+
+                if chrome.isVisible {
+                    bottomBar
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.easeInOut(duration: 0.22), value: chrome.isVisible)
         }
         .background(CyberpunkTheme.void.ignoresSafeArea())
         .preferredColorScheme(.dark)
         .onAppear { wireHistoryHandlers() }
         .onChange(of: tabManager.selectedTabID) { _, _ in
             wireHistoryHandlers()
+            withAnimation(.easeInOut(duration: 0.22)) { chrome.reveal() }
         }
         .onChange(of: tabManager.tabs.count) { _, _ in
             wireHistoryHandlers()
@@ -81,41 +105,10 @@ struct ContentView: View {
         .overlay(alignment: .bottom) {
             if let bookmarkSavedMessage {
                 CyberpunkToast(message: bookmarkSavedMessage)
-                    .padding(.bottom, 64)
+                    .padding(.bottom, chrome.isVisible ? 64 : 24)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-    }
-
-    private var cyberHeader: some View {
-        HStack(alignment: .firstTextBaseline) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("LEAP // リープ")
-                    .font(.system(.caption, design: .monospaced).weight(.heavy))
-                    .foregroundStyle(CyberpunkTheme.auraGradient)
-                    .shadow(color: CyberpunkTheme.neonPink.opacity(0.6), radius: 8)
-                Text("NEO-TŌKYŌ NET · 2226")
-                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(CyberpunkTheme.mist.opacity(0.8))
-            }
-            Spacer()
-            Text("\(tabManager.tabs.count) PAGE\(tabManager.tabs.count == 1 ? "" : "S")")
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundStyle(CyberpunkTheme.neonViolet)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Capsule().stroke(CyberpunkTheme.neonViolet.opacity(0.5), lineWidth: 1))
-            Text(browser.isLoading ? "SYNCING…" : "LINK STABLE")
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundStyle(browser.isLoading ? CyberpunkTheme.neonAmber : CyberpunkTheme.neonCyan)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Capsule().stroke(browser.isLoading ? CyberpunkTheme.neonAmber.opacity(0.6) : CyberpunkTheme.neonCyan.opacity(0.5), lineWidth: 1))
-        }
-        .padding(.horizontal, 12)
-        .padding(.top, 8)
-        .padding(.bottom, 4)
-        .background(CyberpunkTheme.chromeGradient)
     }
 
     private var navigationBar: some View {
@@ -138,7 +131,8 @@ struct ContentView: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        .background(CyberpunkTheme.chromeGradient)
+        .padding(.top, 2)
+        .background(CyberpunkTheme.chromeGradient.opacity(0.96))
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(CyberpunkTheme.neonPink.opacity(0.35))
@@ -149,22 +143,38 @@ struct ContentView: View {
     private var webStack: some View {
         ZStack {
             ForEach(tabManager.tabs) { tab in
-                WebView(
-                    browser: tab.browser,
-                    onSwipeToNextTab: { tabManager.selectNext() },
-                    onSwipeToPreviousTab: { tabManager.selectPrevious() }
-                )
-                .opacity(tab.id == tabManager.selectedTabID ? 1 : 0)
-                .allowsHitTesting(tab.id == tabManager.selectedTabID)
+                tabWebView(for: tab)
+                    .opacity(tab.id == tabManager.selectedTabID ? 1 : 0)
+                    .allowsHitTesting(tab.id == tabManager.selectedTabID)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(CyberpunkTheme.auraGradient)
-                .frame(height: 1)
-                .opacity(0.7)
-        }
+    }
+
+    @ViewBuilder
+    private func tabWebView(for tab: BrowserTab) -> some View {
+        #if os(iOS)
+        WebView(
+            browser: tab.browser,
+            onSwipeToNextTab: { tabManager.selectNext() },
+            onSwipeToPreviousTab: { tabManager.selectPrevious() },
+            onScroll: { y, dragging in
+                chrome.handleScroll(offsetY: y, isDragging: dragging)
+            }
+        )
+        #else
+        WebView(
+            browser: tab.browser,
+            onSwipeToNextTab: { tabManager.selectNext() },
+            onSwipeToPreviousTab: { tabManager.selectPrevious() },
+            onScroll: { y, dragging in
+                chrome.handleScroll(offsetY: y, isDragging: dragging)
+            },
+            onMacScroll: { y, delta in
+                chrome.handleMacScroll(scrollY: y, deltaY: delta)
+            }
+        )
+        #endif
     }
 
     private var bottomBar: some View {
@@ -184,7 +194,7 @@ struct ContentView: View {
         }
         .padding(.top, 8)
         .padding(.bottom, 10)
-        .background(CyberpunkTheme.chromeGradient)
+        .background(CyberpunkTheme.chromeGradient.opacity(0.96))
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(CyberpunkTheme.neonCyan.opacity(0.35))

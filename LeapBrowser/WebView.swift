@@ -10,16 +10,23 @@ struct WebView: UIViewRepresentable {
     @ObservedObject var browser: BrowserViewModel
     var onSwipeToNextTab: (() -> Void)?
     var onSwipeToPreviousTab: (() -> Void)?
+    var onScroll: ((CGFloat, Bool) -> Void)?
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(browser: browser, onSwipeToNextTab: onSwipeToNextTab, onSwipeToPreviousTab: onSwipeToPreviousTab)
+        Coordinator(
+            browser: browser,
+            onSwipeToNextTab: onSwipeToNextTab,
+            onSwipeToPreviousTab: onSwipeToPreviousTab,
+            onScroll: onScroll
+        )
     }
 
     func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView(frame: .zero, configuration: makeConfiguration())
+        let webView = WKWebView(frame: .zero, configuration: makeConfiguration(coordinator: context.coordinator))
         webView.navigationDelegate = context.coordinator
-        // Back/forward edge swipes fight tab switching — use the back button instead.
         webView.allowsBackForwardNavigationGestures = false
+        webView.scrollView.delegate = context.coordinator
+        webView.scrollView.alwaysBounceVertical = true
         applyPreferredDarkAppearance(to: webView)
         context.coordinator.observe(webView)
         context.coordinator.installTabSwipe(on: webView)
@@ -31,6 +38,7 @@ struct WebView: UIViewRepresentable {
         applyPreferredDarkAppearance(to: webView)
         context.coordinator.onSwipeToNextTab = onSwipeToNextTab
         context.coordinator.onSwipeToPreviousTab = onSwipeToPreviousTab
+        context.coordinator.onScroll = onScroll
         context.coordinator.browser = browser
     }
 }
@@ -39,18 +47,27 @@ struct WebView: NSViewRepresentable {
     @ObservedObject var browser: BrowserViewModel
     var onSwipeToNextTab: (() -> Void)?
     var onSwipeToPreviousTab: (() -> Void)?
+    var onScroll: ((CGFloat, Bool) -> Void)?
+    var onMacScroll: ((CGFloat, CGFloat) -> Void)?
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(browser: browser, onSwipeToNextTab: onSwipeToNextTab, onSwipeToPreviousTab: onSwipeToPreviousTab)
+        Coordinator(
+            browser: browser,
+            onSwipeToNextTab: onSwipeToNextTab,
+            onSwipeToPreviousTab: onSwipeToPreviousTab,
+            onScroll: onScroll,
+            onMacScroll: onMacScroll
+        )
     }
 
     func makeNSView(context: Context) -> WKWebView {
-        let webView = WKWebView(frame: .zero, configuration: makeConfiguration())
+        let webView = WKWebView(frame: .zero, configuration: makeConfiguration(coordinator: context.coordinator))
         webView.navigationDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = false
         applyPreferredDarkAppearance(to: webView)
         context.coordinator.observe(webView)
         context.coordinator.installTabSwipe(on: webView)
+        context.coordinator.installScrollBridge(on: webView)
         browser.attach(webView)
         return webView
     }
@@ -59,6 +76,8 @@ struct WebView: NSViewRepresentable {
         applyPreferredDarkAppearance(to: webView)
         context.coordinator.onSwipeToNextTab = onSwipeToNextTab
         context.coordinator.onSwipeToPreviousTab = onSwipeToPreviousTab
+        context.coordinator.onScroll = onScroll
+        context.coordinator.onMacScroll = onMacScroll
         context.coordinator.browser = browser
     }
 }
@@ -78,25 +97,29 @@ func applyPreferredDarkAppearance(to webView: WKWebView) {
     #endif
 }
 
-final class Coordinator: NSObject, WKNavigationDelegate {
+final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     var browser: BrowserViewModel
     var onSwipeToNextTab: (() -> Void)?
     var onSwipeToPreviousTab: (() -> Void)?
+    var onScroll: ((CGFloat, Bool) -> Void)?
+    var onMacScroll: ((CGFloat, CGFloat) -> Void)?
     private var observations: [NSKeyValueObservation] = []
     #if os(iOS)
     private weak var pan: UIPanGestureRecognizer?
-    #elseif os(macOS)
-    private var monitor: Any?
     #endif
 
     init(
         browser: BrowserViewModel,
         onSwipeToNextTab: (() -> Void)?,
-        onSwipeToPreviousTab: (() -> Void)?
+        onSwipeToPreviousTab: (() -> Void)?,
+        onScroll: ((CGFloat, Bool) -> Void)?,
+        onMacScroll: ((CGFloat, CGFloat) -> Void)? = nil
     ) {
         self.browser = browser
         self.onSwipeToNextTab = onSwipeToNextTab
         self.onSwipeToPreviousTab = onSwipeToPreviousTab
+        self.onScroll = onScroll
+        self.onMacScroll = onMacScroll
     }
 
     func observe(_ webView: WKWebView) {
@@ -143,8 +166,6 @@ final class Coordinator: NSObject, WKNavigationDelegate {
     }
     #elseif os(macOS)
     func installTabSwipe(on webView: WKWebView) {
-        // Trackpad swipe between pages isn't exposed cleanly; use SwiftUI swipe on chrome
-        // plus Option+scroll / two-finger horizontal via magnify alternative — also listen for swipe.
         let swipe = NSPanGestureRecognizer(target: self, action: #selector(handleMacPan(_:)))
         webView.addGestureRecognizer(swipe)
     }
@@ -159,7 +180,22 @@ final class Coordinator: NSObject, WKNavigationDelegate {
             onSwipeToPreviousTab?()
         }
     }
+
+    func installScrollBridge(on webView: WKWebView) {
+        // Script already injected via configuration userContentController.
+    }
     #endif
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard message.name == "leapScroll",
+              let body = message.body as? [String: Any],
+              let y = body["y"] as? Double else { return }
+        let delta = body["delta"] as? Double ?? 0
+        Task { @MainActor in
+            onMacScroll?(CGFloat(y), CGFloat(delta))
+            onScroll?(CGFloat(y), false)
+        }
+    }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         Task { @MainActor in browser.refreshNavigationState() }
@@ -182,6 +218,13 @@ final class Coordinator: NSObject, WKNavigationDelegate {
 }
 
 #if os(iOS)
+extension Coordinator: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let y = scrollView.contentOffset.y + scrollView.adjustedContentInset.top
+        onScroll?(y, scrollView.isDragging || scrollView.isTracking)
+    }
+}
+
 extension Coordinator: UIGestureRecognizerDelegate {
     func gestureRecognizer(
         _ gestureRecognizer: UIGestureRecognizer,
@@ -198,8 +241,29 @@ extension Coordinator: UIGestureRecognizerDelegate {
 }
 #endif
 
-private func makeConfiguration() -> WKWebViewConfiguration {
+private func makeConfiguration(coordinator: Coordinator) -> WKWebViewConfiguration {
     let configuration = WKWebViewConfiguration()
     configuration.processPool = WebKitShared.processPool
+    let contentController = configuration.userContentController
+    contentController.removeScriptMessageHandler(forName: "leapScroll")
+    contentController.add(coordinator, name: "leapScroll")
+    let js = """
+    (function() {
+      if (window.__leapScrollInstalled) return;
+      window.__leapScrollInstalled = true;
+      var lastY = window.scrollY || 0;
+      window.addEventListener('scroll', function() {
+        var y = window.scrollY || document.documentElement.scrollTop || 0;
+        var delta = lastY - y;
+        lastY = y;
+        try { window.webkit.messageHandlers.leapScroll.postMessage({ y: y, delta: delta }); } catch(e) {}
+      }, { passive: true });
+      window.addEventListener('wheel', function(e) {
+        var y = window.scrollY || document.documentElement.scrollTop || 0;
+        try { window.webkit.messageHandlers.leapScroll.postMessage({ y: y, delta: e.deltaY * -1 }); } catch(err) {}
+      }, { passive: true });
+    })();
+    """
+    contentController.addUserScript(WKUserScript(source: js, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
     return configuration
 }
