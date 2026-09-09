@@ -1,12 +1,12 @@
 import SwiftUI
 
 enum CyberpunkTheme {
-    /// Night alley void
-    static let void = Color(red: 0.04, green: 0.02, blue: 0.08)
+    /// Near-black void
+    static let void = Color(red: 0.05, green: 0.05, blue: 0.05)
     /// Raised panel / chrome bar
-    static let panel = Color(red: 0.08, green: 0.05, blue: 0.14)
+    static let panel = Color(red: 0.11, green: 0.11, blue: 0.11)
     /// Soft inner well (address field)
-    static let well = Color(red: 0.12, green: 0.07, blue: 0.20)
+    static let well = Color(red: 0.16, green: 0.16, blue: 0.16)
     /// Hot magenta signage
     static let neonPink = Color(red: 1.0, green: 0.18, blue: 0.72)
     /// Rain-slick cyan
@@ -16,15 +16,15 @@ enum CyberpunkTheme {
     /// Warm kanji-lamp amber
     static let neonAmber = Color(red: 1.0, green: 0.72, blue: 0.20)
     /// Muted street text
-    static let mist = Color(red: 0.72, green: 0.70, blue: 0.82)
+    static let mist = Color(red: 0.70, green: 0.70, blue: 0.72)
     /// Danger / delete
     static let alert = Color(red: 1.0, green: 0.30, blue: 0.35)
 
     static let chromeGradient = LinearGradient(
         colors: [
-            Color(red: 0.10, green: 0.04, blue: 0.18),
-            Color(red: 0.06, green: 0.08, blue: 0.20),
-            Color(red: 0.08, green: 0.03, blue: 0.14),
+            Color(red: 0.02, green: 0.02, blue: 0.02),
+            Color(red: 0.12, green: 0.12, blue: 0.12),
+            Color(red: 0.07, green: 0.07, blue: 0.07),
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
