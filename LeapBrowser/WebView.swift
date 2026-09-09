@@ -95,7 +95,10 @@ final class Coordinator: NSObject, WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        Task { @MainActor in browser.refreshNavigationState() }
+        Task { @MainActor in
+            browser.refreshNavigationState()
+            browser.notifyPageCommitted()
+        }
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {

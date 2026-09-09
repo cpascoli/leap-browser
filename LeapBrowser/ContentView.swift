@@ -9,6 +9,8 @@ struct ContentView: View {
 
     @StateObject private var browser = BrowserViewModel()
     @State private var showBookmarks = false
+    @State private var showHistory = false
+    @State private var showSettings = false
     @State private var showFolderPicker = false
     @State private var bookmarkSavedMessage: String?
 
@@ -25,15 +27,42 @@ struct ContentView: View {
                         .frame(height: 1)
                         .opacity(0.7)
                 }
+            bottomBar
         }
         .background(CyberpunkTheme.void.ignoresSafeArea())
         .preferredColorScheme(.dark)
+        .onAppear {
+            browser.onPageCommitted = { url, title in
+                recordHistory(url: url, title: title)
+            }
+        }
         .sheet(isPresented: $showBookmarks) {
-            BookmarksView { url in
+            BookmarksView(
+                onOpen: { url in browser.load(url) },
+                currentPageTitle: browser.pageTitle,
+                currentPageURL: browser.currentURL,
+                onBookmarkCurrent: {
+                    if folders.isEmpty {
+                        saveBookmark(to: nil)
+                    } else {
+                        showFolderPicker = true
+                    }
+                }
+            )
+            .presentationDetents([.medium, .large])
+            .preferredColorScheme(.dark)
+        }
+        .sheet(isPresented: $showHistory) {
+            HistoryView { url in
                 browser.load(url)
             }
             .presentationDetents([.medium, .large])
             .preferredColorScheme(.dark)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+                .presentationDetents([.medium, .large])
+                .preferredColorScheme(.dark)
         }
         .confirmationDialog("SAVE TO NODE…", isPresented: $showFolderPicker, titleVisibility: .visible) {
             Button("ROOT // NO FOLDER") {
@@ -49,7 +78,7 @@ struct ContentView: View {
         .overlay(alignment: .bottom) {
             if let bookmarkSavedMessage {
                 CyberpunkToast(message: bookmarkSavedMessage)
-                    .padding(.bottom, 18)
+                    .padding(.bottom, 64)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -94,16 +123,6 @@ struct ContentView: View {
             NeonIconButton(systemName: "arrow.right", tint: CyberpunkTheme.neonPink) {
                 browser.submitAddressBar()
             }
-            NeonIconButton(systemName: "bookmark.fill", tint: CyberpunkTheme.neonViolet) {
-                if folders.isEmpty {
-                    saveBookmark(to: nil)
-                } else {
-                    showFolderPicker = true
-                }
-            }
-            NeonIconButton(systemName: "book.closed.fill", tint: CyberpunkTheme.neonCyan) {
-                showBookmarks = true
-            }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
@@ -113,6 +132,44 @@ struct ContentView: View {
                 .fill(CyberpunkTheme.neonPink.opacity(0.35))
                 .frame(height: 1)
         }
+    }
+
+    private var bottomBar: some View {
+        HStack(spacing: 0) {
+            bottomItem(title: "Settings", systemName: "gearshape.fill", tint: CyberpunkTheme.neonAmber) {
+                showSettings = true
+            }
+            bottomItem(title: "History", systemName: "clock.arrow.circlepath", tint: CyberpunkTheme.neonCyan) {
+                showHistory = true
+            }
+            bottomItem(title: "Bookmarks", systemName: "book.closed.fill", tint: CyberpunkTheme.neonViolet) {
+                showBookmarks = true
+            }
+        }
+        .padding(.top, 8)
+        .padding(.bottom, 10)
+        .background(CyberpunkTheme.chromeGradient)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(CyberpunkTheme.neonCyan.opacity(0.35))
+                .frame(height: 1)
+        }
+    }
+
+    private func bottomItem(title: String, systemName: String, tint: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: systemName)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(tint)
+                    .shadow(color: tint.opacity(0.45), radius: 6)
+                Text(title.uppercased())
+                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    .foregroundStyle(CyberpunkTheme.mist)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
@@ -153,9 +210,26 @@ struct ContentView: View {
             }
         }
     }
+
+    private func recordHistory(url: URL, title: String) {
+        let urlString = url.absoluteString
+        // Ignore about:blank style empties
+        guard !urlString.isEmpty, url.scheme == "http" || url.scheme == "https" else { return }
+
+        let descriptor = FetchDescriptor<HistoryEntry>(
+            predicate: #Predicate { $0.urlString == urlString }
+        )
+        if let existing = try? modelContext.fetch(descriptor).first {
+            existing.title = title
+            existing.visitedAt = Date()
+            existing.visitCount += 1
+        } else {
+            modelContext.insert(HistoryEntry(title: title, urlString: urlString))
+        }
+    }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Bookmark.self, BookmarkFolder.self], inMemory: true)
+        .modelContainer(for: [Bookmark.self, BookmarkFolder.self, HistoryEntry.self], inMemory: true)
 }

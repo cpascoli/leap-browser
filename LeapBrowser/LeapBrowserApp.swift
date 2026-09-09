@@ -8,6 +8,6 @@ struct LeapBrowserApp: App {
             ContentView()
                 .preferredColorScheme(.dark)
         }
-        .modelContainer(for: [Bookmark.self, BookmarkFolder.self])
+        .modelContainer(for: [Bookmark.self, BookmarkFolder.self, HistoryEntry.self])
     }
 }
