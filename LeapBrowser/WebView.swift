@@ -227,11 +227,11 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
             return
         }
 
-        // User taps and target=_blank / window.open: load in this web view so Universal Links
-        // (YouTube app, etc.) are not invoked.
-        let isUserLink = navigationAction.navigationType == .linkActivated
-        let opensNewWindow = navigationAction.targetFrame == nil
-        if isUserLink || opensNewWindow {
+        // Only rewrite *main-frame link taps*. Treating targetFrame == nil as "new window"
+        // was canceling normal loads/redirects and pages never finished.
+        // target=_blank / window.open are handled in createWebViewWith below.
+        if navigationAction.navigationType == .linkActivated,
+           navigationAction.targetFrame?.isMainFrame == true {
             decisionHandler(.cancel)
             var request = navigationAction.request
             LanguagePreferences.apply(to: &request)
@@ -239,9 +239,7 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
             return
         }
 
-        // Prefer WebKit's "allow without app links" when available (same idea as Firefox iOS),
-        // so http(s) redirects also stay in Leap instead of opening YouTube/Maps/etc.
-        decisionHandler(InAppNavigation.stayInBrowserPolicy)
+        decisionHandler(.allow)
     }
 
     func webView(
@@ -306,15 +304,6 @@ extension Coordinator: UIGestureRecognizerDelegate {
 
 
 enum InAppNavigation {
-    /// WKNavigationActionPolicy.allow + 2 ≈ allow without trying Universal Links (WebKit).
-    static var stayInBrowserPolicy: WKNavigationActionPolicy {
-        #if os(iOS)
-        WKNavigationActionPolicy(rawValue: WKNavigationActionPolicy.allow.rawValue + 2) ?? .allow
-        #else
-        .allow
-        #endif
-    }
-
     /// Map known app deep links back to https so they stay in WKWebView.
     static func httpsFallback(for url: URL) -> URL? {
         let scheme = (url.scheme ?? "").lowercased()
