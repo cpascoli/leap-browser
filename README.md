@@ -29,9 +29,27 @@ Chromium / CEF is **out of scope** as the rendering engine (iOS App Store constr
 - [Milestones](docs/MILESTONES.md) — phased plan from empty repo to polished product
 - [Decisions](docs/DECISIONS.md) — architecture decision records
 
+## Open & run (Milestone 1)
+
+Requires **Xcode 15+** on a Mac (iOS 17 / macOS 14 SDKs).
+
+1. Clone this repo and open `LeapBrowser.xcodeproj`
+2. Select the **LeapBrowser** scheme
+3. Pick an **iOS Simulator** or **My Mac**, then Run (⌘R)
+4. You should see https://example.com in a WKWebView
+
+### Identifiers (placeholders)
+
+| Item | Value |
+| --- | --- |
+| Bundle ID | `app.leapbrowser` |
+| iCloud container (later) | `iCloud.app.leapbrowser` |
+
+CloudKit / iCloud entitlements are **not** enabled yet (Milestone 7).
+
 ## Status
 
-Documentation only for now. Xcode / app scaffolding comes in a later milestone.
+Milestone **0** (docs) and **1** (multiplatform skeleton + WKWebView) are in progress on `main`. Next: Milestone 2 — URL bar and navigation chrome.
 
 ## Licence
 
