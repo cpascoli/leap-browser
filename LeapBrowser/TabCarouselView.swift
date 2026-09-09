@@ -4,41 +4,21 @@ struct TabCarouselView: View {
     @ObservedObject var tabManager: TabManager
     @Environment(\.dismiss) private var dismiss
 
+    private let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+    ]
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 14) {
-                        ForEach(tabManager.tabs) { tab in
-                            tabCard(tab)
-                        }
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 12) {
+                    ForEach(tabManager.tabs) { tab in
+                        tabCard(tab)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
                 }
-
-                Button {
-                    tabManager.addTab()
-                    dismiss()
-                } label: {
-                    Label("NEW PAGE", systemImage: "plus.circle.fill")
-                        .font(.system(.subheadline, design: .monospaced).weight(.bold))
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .foregroundStyle(CyberpunkTheme.void)
-                        .background(CyberpunkTheme.auraGradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 16)
-
-                Text("Flip through open pages · swipe left/right on the page to switch")
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(CyberpunkTheme.mist)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 8)
+                .padding(16)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(CyberpunkTheme.void.ignoresSafeArea())
             .navigationTitle("PAGES")
             #if os(iOS)
@@ -50,7 +30,21 @@ struct TabCarouselView: View {
                         .font(.system(.caption, design: .monospaced).weight(.bold))
                         .foregroundStyle(CyberpunkTheme.neonCyan)
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        tabManager.addTab()
+                        dismiss()
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(CyberpunkTheme.neonPink)
+                    }
+                    .help("New page")
+                }
             }
+            #if os(iOS)
+            .toolbarBackground(CyberpunkTheme.panel, for: .navigationBar)
+            #endif
         }
         .preferredColorScheme(.dark)
     }
@@ -58,12 +52,13 @@ struct TabCarouselView: View {
     private func tabCard(_ tab: BrowserTab) -> some View {
         let selected = tab.id == tabManager.selectedTabID
         return VStack(alignment: .leading, spacing: 8) {
-            HStack {
+            HStack(alignment: .top) {
                 Text(tab.title)
                     .font(.system(.caption, design: .monospaced).weight(.bold))
                     .foregroundStyle(CyberpunkTheme.neonCyan)
                     .lineLimit(2)
-                Spacer(minLength: 0)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 4)
                 if tabManager.tabs.count > 1 {
                     Button {
                         tabManager.closeTab(tab.id)
@@ -71,6 +66,8 @@ struct TabCarouselView: View {
                         Image(systemName: "xmark")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(CyberpunkTheme.mist)
+                            .frame(width: 22, height: 22)
+                            .background(Circle().fill(CyberpunkTheme.well))
                     }
                     .buttonStyle(.plain)
                 }
@@ -85,14 +82,17 @@ struct TabCarouselView: View {
                 .foregroundStyle(selected ? CyberpunkTheme.neonAmber : CyberpunkTheme.neonPink)
         }
         .padding(12)
-        .frame(width: 200, height: 140, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 130, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(CyberpunkTheme.panel)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(selected ? CyberpunkTheme.neonCyan.opacity(0.9) : CyberpunkTheme.neonPink.opacity(0.35), lineWidth: selected ? 2 : 1)
+                .stroke(
+                    selected ? CyberpunkTheme.neonCyan.opacity(0.9) : CyberpunkTheme.neonPink.opacity(0.35),
+                    lineWidth: selected ? 2 : 1
+                )
         )
         .shadow(color: (selected ? CyberpunkTheme.neonCyan : CyberpunkTheme.neonPink).opacity(0.25), radius: 10)
         .onTapGesture {
