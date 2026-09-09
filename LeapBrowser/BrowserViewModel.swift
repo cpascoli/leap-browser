@@ -19,7 +19,7 @@ final class BrowserViewModel: ObservableObject {
     func attach(_ webView: WKWebView) {
         self.webView = webView
         if webView.url == nil {
-            load(URLHelpers.homeURL)
+            load(currentURL)
         }
         refreshNavigationState()
     }
