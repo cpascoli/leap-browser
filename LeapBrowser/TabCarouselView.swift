@@ -21,7 +21,7 @@ struct TabCarouselView: View {
                     tabManager.addTab()
                     dismiss()
                 } label: {
-                    Label("NEW TAB", systemImage: "plus.circle.fill")
+                    Label("NEW PAGE", systemImage: "plus.circle.fill")
                         .font(.system(.subheadline, design: .monospaced).weight(.bold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
@@ -31,7 +31,7 @@ struct TabCarouselView: View {
                 .buttonStyle(.plain)
                 .padding(.horizontal, 16)
 
-                Text("Swipe the page left/right to switch tabs · Hold + for this carousel")
+                Text("Flip through open pages · swipe left/right on the page to switch")
                     .font(.system(size: 10, design: .monospaced))
                     .foregroundStyle(CyberpunkTheme.mist)
                     .multilineTextAlignment(.center)
@@ -40,7 +40,7 @@ struct TabCarouselView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(CyberpunkTheme.void.ignoresSafeArea())
-            .navigationTitle("OPEN TABS")
+            .navigationTitle("PAGES")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

@@ -20,7 +20,6 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             cyberHeader
-            tabStrip
             navigationBar
             loadingPulse
             webStack
@@ -100,7 +99,7 @@ struct ContentView: View {
                     .foregroundStyle(CyberpunkTheme.mist.opacity(0.8))
             }
             Spacer()
-            Text("\(tabManager.tabs.count) TAB\(tabManager.tabs.count == 1 ? "" : "S")")
+            Text("\(tabManager.tabs.count) PAGE\(tabManager.tabs.count == 1 ? "" : "S")")
                 .font(.system(size: 9, weight: .bold, design: .monospaced))
                 .foregroundStyle(CyberpunkTheme.neonViolet)
                 .padding(.horizontal, 8)
@@ -117,80 +116,6 @@ struct ContentView: View {
         .padding(.top, 8)
         .padding(.bottom, 4)
         .background(CyberpunkTheme.chromeGradient)
-    }
-
-    private var tabStrip: some View {
-        HStack(spacing: 8) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(tabManager.tabs) { tab in
-                        tabChip(tab)
-                    }
-                }
-            }
-
-            // Tap = new tab; long-press = carousel (still includes new tab)
-            Image(systemName: "plus")
-                .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(CyberpunkTheme.neonPink)
-                .frame(width: 30, height: 30)
-                .background(RoundedRectangle(cornerRadius: 8).fill(CyberpunkTheme.well))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(CyberpunkTheme.neonPink.opacity(0.55), lineWidth: 1))
-                .shadow(color: CyberpunkTheme.neonPink.opacity(0.35), radius: 6)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    tabManager.addTab()
-                    wireHistoryHandlers()
-                }
-                .onLongPressGesture(minimumDuration: 0.35) {
-                    showTabCarousel = true
-                }
-                .help("New tab — hold for open tabs")
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(CyberpunkTheme.panel)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(CyberpunkTheme.neonCyan.opacity(0.25))
-                .frame(height: 1)
-        }
-    }
-
-    private func tabChip(_ tab: BrowserTab) -> some View {
-        let selected = tab.id == tabManager.selectedTabID
-        return HStack(spacing: 6) {
-            Button {
-                tabManager.select(tab.id)
-            } label: {
-                Text(tab.title)
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(selected ? CyberpunkTheme.neonCyan : CyberpunkTheme.mist)
-                    .lineLimit(1)
-            }
-            .buttonStyle(.plain)
-
-            if tabManager.tabs.count > 1 {
-                Button {
-                    tabManager.closeTab(tab.id)
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(CyberpunkTheme.mist)
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(selected ? CyberpunkTheme.well : CyberpunkTheme.void.opacity(0.5))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(selected ? CyberpunkTheme.neonCyan.opacity(0.7) : Color.clear, lineWidth: 1)
-        )
     }
 
     private var navigationBar: some View {
@@ -244,14 +169,17 @@ struct ContentView: View {
 
     private var bottomBar: some View {
         HStack(spacing: 0) {
-            bottomItem(title: "Settings", systemName: "gearshape.fill", tint: CyberpunkTheme.neonAmber) {
-                showSettings = true
+            bottomItem(title: "Pages", systemName: "square.on.square", tint: CyberpunkTheme.neonPink) {
+                showTabCarousel = true
             }
             bottomItem(title: "History", systemName: "clock.arrow.circlepath", tint: CyberpunkTheme.neonCyan) {
                 showHistory = true
             }
             bottomItem(title: "Bookmarks", systemName: "book.closed.fill", tint: CyberpunkTheme.neonViolet) {
                 showBookmarks = true
+            }
+            bottomItem(title: "Settings", systemName: "gearshape.fill", tint: CyberpunkTheme.neonAmber) {
+                showSettings = true
             }
         }
         .padding(.top, 8)
