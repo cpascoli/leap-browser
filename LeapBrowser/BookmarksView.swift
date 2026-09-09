@@ -198,6 +198,8 @@ private struct MoveBookmarkSheet: View {
     var onSelect: (BookmarkFolder?) -> Void
     var onCancel: () -> Void
 
+    @ObservedObject private var themeManager = ThemeManager.shared
+
     var body: some View {
         NavigationStack {
             List {
