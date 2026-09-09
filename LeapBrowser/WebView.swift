@@ -13,13 +13,14 @@ struct WebView: UIViewRepresentable {
         let webView = WKWebView(frame: .zero, configuration: makeConfiguration())
         webView.navigationDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
+        applyPreferredDarkAppearance(to: webView)
         context.coordinator.observe(webView)
         browser.attach(webView)
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        // Navigation is driven by BrowserViewModel, not by SwiftUI updates.
+        applyPreferredDarkAppearance(to: webView)
     }
 }
 #elseif os(macOS)
@@ -34,16 +35,32 @@ struct WebView: NSViewRepresentable {
         let webView = WKWebView(frame: .zero, configuration: makeConfiguration())
         webView.navigationDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
+        applyPreferredDarkAppearance(to: webView)
         context.coordinator.observe(webView)
         browser.attach(webView)
         return webView
     }
 
     func updateNSView(_ webView: WKWebView, context: Context) {
-        // Navigation is driven by BrowserViewModel, not by SwiftUI updates.
+        applyPreferredDarkAppearance(to: webView)
     }
 }
 #endif
+
+/// Ask WebKit to report `prefers-color-scheme: dark` so sites with a night theme opt in.
+func applyPreferredDarkAppearance(to webView: WKWebView) {
+    #if os(iOS)
+    webView.overrideUserInterfaceStyle = .dark
+    if #available(iOS 15.0, *) {
+        webView.underPageBackgroundColor = UIColor(CyberpunkTheme.void)
+    }
+    #elseif os(macOS)
+    webView.appearance = NSAppearance(named: .darkAqua)
+    if #available(macOS 12.0, *) {
+        webView.underPageBackgroundColor = NSColor(CyberpunkTheme.void)
+    }
+    #endif
+}
 
 final class Coordinator: NSObject, WKNavigationDelegate {
     let browser: BrowserViewModel
