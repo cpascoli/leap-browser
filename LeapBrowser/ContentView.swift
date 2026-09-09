@@ -14,27 +14,33 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            cyberHeader
             navigationBar
-            if browser.isLoading {
-                ProgressView()
-                    .progressViewStyle(.linear)
-                    .frame(height: 2)
-            }
+            loadingPulse
             WebView(browser: browser)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .overlay(alignment: .top) {
+                    Rectangle()
+                        .fill(CyberpunkTheme.auraGradient)
+                        .frame(height: 1)
+                        .opacity(0.7)
+                }
         }
+        .background(CyberpunkTheme.void.ignoresSafeArea())
+        .preferredColorScheme(.dark)
         .sheet(isPresented: $showBookmarks) {
             BookmarksView { url in
                 browser.load(url)
             }
             .presentationDetents([.medium, .large])
+            .preferredColorScheme(.dark)
         }
-        .confirmationDialog("Save bookmark to…", isPresented: $showFolderPicker, titleVisibility: .visible) {
-            Button("No Folder") {
+        .confirmationDialog("SAVE TO NODE…", isPresented: $showFolderPicker, titleVisibility: .visible) {
+            Button("ROOT // NO FOLDER") {
                 saveBookmark(to: nil)
             }
             ForEach(folders, id: \.id) { folder in
-                Button(folder.name) {
+                Button(folder.name.uppercased()) {
                     saveBookmark(to: folder)
                 }
             }
@@ -42,77 +48,87 @@ struct ContentView: View {
         }
         .overlay(alignment: .bottom) {
             if let bookmarkSavedMessage {
-                Text(bookmarkSavedMessage)
-                    .font(.footnote.weight(.medium))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(.bottom, 16)
+                CyberpunkToast(message: bookmarkSavedMessage)
+                    .padding(.bottom, 18)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
     }
 
+    private var cyberHeader: some View {
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("LEAP // リープ")
+                    .font(.system(.caption, design: .monospaced).weight(.heavy))
+                    .foregroundStyle(CyberpunkTheme.auraGradient)
+                    .shadow(color: CyberpunkTheme.neonPink.opacity(0.6), radius: 8)
+                Text("NEO-TŌKYŌ NET · 2226")
+                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(CyberpunkTheme.mist.opacity(0.8))
+            }
+            Spacer()
+            Text(browser.isLoading ? "SYNCING…" : "LINK STABLE")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundStyle(browser.isLoading ? CyberpunkTheme.neonAmber : CyberpunkTheme.neonCyan)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Capsule().stroke(browser.isLoading ? CyberpunkTheme.neonAmber.opacity(0.6) : CyberpunkTheme.neonCyan.opacity(0.5), lineWidth: 1))
+        }
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+        .background(CyberpunkTheme.chromeGradient)
+    }
+
     private var navigationBar: some View {
-        HStack(spacing: 10) {
-            Button {
+        HStack(spacing: 8) {
+            NeonIconButton(systemName: "chevron.backward", tint: CyberpunkTheme.neonCyan, enabled: browser.canGoBack) {
                 browser.goBack()
-            } label: {
-                Image(systemName: "chevron.backward")
             }
-            .disabled(!browser.canGoBack)
-            .help("Back")
-
-            Button {
+            NeonIconButton(systemName: "house.fill", tint: CyberpunkTheme.neonAmber) {
                 browser.goHome()
-            } label: {
-                Image(systemName: "house")
             }
-            .help("Home (Google)")
-
-            TextField("Search or enter address", text: $browser.addressText)
-                .textFieldStyle(.roundedBorder)
-                #if os(iOS)
-                .textInputAutocapitalization(.never)
-                .keyboardType(.URL)
-                .autocorrectionDisabled()
-                #endif
-                .onSubmit {
-                    browser.submitAddressBar()
-                }
-
-            Button {
+            CyberpunkAddressField(text: $browser.addressText) {
                 browser.submitAddressBar()
-            } label: {
-                Image(systemName: "arrow.right.circle.fill")
             }
-            .help("Go")
-
-            Button {
+            NeonIconButton(systemName: "arrow.right", tint: CyberpunkTheme.neonPink) {
+                browser.submitAddressBar()
+            }
+            NeonIconButton(systemName: "bookmark.fill", tint: CyberpunkTheme.neonViolet) {
                 if folders.isEmpty {
                     saveBookmark(to: nil)
                 } else {
                     showFolderPicker = true
                 }
-            } label: {
-                Image(systemName: "bookmark")
             }
-            .help("Bookmark this page")
-
-            Button {
+            NeonIconButton(systemName: "book.closed.fill", tint: CyberpunkTheme.neonCyan) {
                 showBookmarks = true
-            } label: {
-                Image(systemName: "book")
             }
-            .help("Bookmarks")
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 10)
         .padding(.vertical, 8)
-        #if os(iOS)
-        .background(Color(uiColor: .secondarySystemBackground))
-        #else
-        .background(.bar)
-        #endif
+        .background(CyberpunkTheme.chromeGradient)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(CyberpunkTheme.neonPink.opacity(0.35))
+                .frame(height: 1)
+        }
+    }
+
+    @ViewBuilder
+    private var loadingPulse: some View {
+        ZStack(alignment: .leading) {
+            Rectangle()
+                .fill(CyberpunkTheme.panel)
+                .frame(height: 2)
+            if browser.isLoading {
+                Rectangle()
+                    .fill(CyberpunkTheme.auraGradient)
+                    .frame(height: 2)
+                    .shadow(color: CyberpunkTheme.neonCyan.opacity(0.8), radius: 4)
+            }
+        }
+        .frame(height: 2)
     }
 
     private func saveBookmark(to folder: BookmarkFolder?) {
@@ -126,9 +142,9 @@ struct ContentView: View {
         }
         let bookmark = Bookmark(title: title, urlString: urlString, folder: folder, sortIndex: sortIndex)
         modelContext.insert(bookmark)
-        let destination = folder?.name ?? "Bookmarks"
+        let destination = folder?.name ?? "ROOT"
         withAnimation {
-            bookmarkSavedMessage = "Saved to \(destination)"
+            bookmarkSavedMessage = "Cached → \(destination)"
         }
         Task {
             try? await Task.sleep(nanoseconds: 1_600_000_000)

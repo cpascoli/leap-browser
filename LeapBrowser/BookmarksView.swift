@@ -18,14 +18,16 @@ struct BookmarksView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Bookmarks") {
+                Section {
                     ForEach(rootBookmarks, id: \.id) { bookmark in
                         bookmarkRow(bookmark)
                     }
                     .onDelete(perform: deleteRootBookmarks)
+                } header: {
+                    sectionLabel("ROOT CACHE")
                 }
 
-                Section("Folders") {
+                Section {
                     ForEach(folders, id: \.id) { folder in
                         DisclosureGroup {
                             ForEach(folder.bookmarks.sorted(by: { $0.sortIndex < $1.sortIndex }), id: \.id) { bookmark in
@@ -35,7 +37,14 @@ struct BookmarksView: View {
                                 deleteBookmarks(in: folder, at: offsets)
                             }
                         } label: {
-                            Label(folder.name, systemImage: "folder")
+                            Label {
+                                Text(folder.name)
+                                    .font(.system(.body, design: .monospaced).weight(.semibold))
+                                    .foregroundStyle(CyberpunkTheme.neonAmber)
+                            } icon: {
+                                Image(systemName: "folder.fill")
+                                    .foregroundStyle(CyberpunkTheme.neonPink)
+                            }
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
@@ -45,22 +54,37 @@ struct BookmarksView: View {
                             }
                         }
                     }
+                } header: {
+                    sectionLabel("SECTOR FOLDERS")
                 }
             }
-            .navigationTitle("Bookmarks")
+            #if os(iOS)
+            .scrollContentBackground(.hidden)
+            #endif
+            .background(CyberpunkTheme.void.ignoresSafeArea())
+            .navigationTitle("MEMORY BANK")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
+                    Button("CLOSE") { dismiss() }
+                        .font(.system(.caption, design: .monospaced).weight(.bold))
+                        .foregroundStyle(CyberpunkTheme.neonCyan)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         showingNewFolder = true
                     } label: {
                         Label("New Folder", systemImage: "folder.badge.plus")
+                            .foregroundStyle(CyberpunkTheme.neonPink)
                     }
                 }
             }
-            .alert("New Folder", isPresented: $showingNewFolder) {
+            #if os(iOS)
+            .toolbarBackground(CyberpunkTheme.panel, for: .navigationBar)
+            #endif
+            .alert("NEW SECTOR", isPresented: $showingNewFolder) {
                 TextField("Folder name", text: $newFolderName)
                 Button("Cancel", role: .cancel) {
                     newFolderName = ""
@@ -73,7 +97,7 @@ struct BookmarksView: View {
                     newFolderName = ""
                 }
             } message: {
-                Text("Organise bookmarks into a named folder.")
+                Text("Allocate a folder node in the memory bank.")
             }
             .sheet(isPresented: $showingMoveSheet) {
                 MoveBookmarkSheet(
@@ -91,8 +115,18 @@ struct BookmarksView: View {
                         showingMoveSheet = false
                     }
                 )
+                .preferredColorScheme(.dark)
             }
         }
+        .preferredColorScheme(.dark)
+        .tint(CyberpunkTheme.neonCyan)
+    }
+
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(.caption2, design: .monospaced).weight(.bold))
+            .foregroundStyle(CyberpunkTheme.mist)
+            .tracking(1.5)
     }
 
     @ViewBuilder
@@ -103,16 +137,19 @@ struct BookmarksView: View {
                 dismiss()
             }
         } label: {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(bookmark.title.isEmpty ? bookmark.urlString : bookmark.title)
-                    .foregroundStyle(.primary)
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
+                    .foregroundStyle(CyberpunkTheme.neonCyan)
                     .lineLimit(1)
                 Text(bookmark.urlString)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(.caption2, design: .monospaced))
+                    .foregroundStyle(CyberpunkTheme.mist)
                     .lineLimit(1)
             }
+            .padding(.vertical, 2)
         }
+        .listRowBackground(CyberpunkTheme.panel.opacity(0.9))
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 modelContext.delete(bookmark)
@@ -125,7 +162,7 @@ struct BookmarksView: View {
             } label: {
                 Label("Move", systemImage: "folder")
             }
-            .tint(.indigo)
+            .tint(CyberpunkTheme.neonViolet)
         }
     }
 
@@ -151,21 +188,35 @@ private struct MoveBookmarkSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Button("No Folder (top level)") {
+                Button("ROOT // NO FOLDER") {
                     onSelect(nil)
                 }
+                .foregroundStyle(CyberpunkTheme.neonCyan)
+                .listRowBackground(CyberpunkTheme.panel)
+
                 ForEach(folders, id: \.id) { folder in
-                    Button(folder.name) {
+                    Button(folder.name.uppercased()) {
                         onSelect(folder)
                     }
+                    .foregroundStyle(CyberpunkTheme.neonAmber)
+                    .listRowBackground(CyberpunkTheme.panel)
                 }
             }
-            .navigationTitle("Move to Folder")
+            #if os(iOS)
+            .scrollContentBackground(.hidden)
+            #endif
+            .background(CyberpunkTheme.void.ignoresSafeArea())
+            .navigationTitle("RELOCATE NODE")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onCancel)
+                        .foregroundStyle(CyberpunkTheme.mist)
                 }
             }
         }
+        .preferredColorScheme(.dark)
     }
 }
