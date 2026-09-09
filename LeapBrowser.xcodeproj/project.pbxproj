@@ -10,6 +10,10 @@
 		A10000000000000000000001 /* LeapBrowserApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* LeapBrowserApp.swift */; };
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* ContentView.swift */; };
 		A10000000000000000000003 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* WebView.swift */; };
+		A10000000000000000000005 /* BrowserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* BrowserViewModel.swift */; };
+		A10000000000000000000006 /* BookmarkModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* BookmarkModels.swift */; };
+		A10000000000000000000007 /* BookmarksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* BookmarksView.swift */; };
+		A10000000000000000000008 /* URLHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* URLHelpers.swift */; };
 		A10000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -17,6 +21,10 @@
 		A20000000000000000000001 /* LeapBrowserApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeapBrowserApp.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A20000000000000000000003 /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
+		A20000000000000000000005 /* BrowserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserViewModel.swift; sourceTree = "<group>"; };
+		A20000000000000000000006 /* BookmarkModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkModels.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* BookmarksView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarksView.swift; sourceTree = "<group>"; };
+		A20000000000000000000008 /* URLHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLHelpers.swift; sourceTree = "<group>"; };
 		A20000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000010 /* LeapBrowser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LeapBrowser.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -46,6 +54,10 @@
 				A20000000000000000000001 /* LeapBrowserApp.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
 				A20000000000000000000003 /* WebView.swift */,
+				A20000000000000000000005 /* BrowserViewModel.swift */,
+				A20000000000000000000006 /* BookmarkModels.swift */,
+				A20000000000000000000007 /* BookmarksView.swift */,
+				A20000000000000000000008 /* URLHelpers.swift */,
 				A20000000000000000000004 /* Assets.xcassets */,
 			);
 			path = LeapBrowser;
@@ -131,6 +143,10 @@
 				A10000000000000000000001 /* LeapBrowserApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* WebView.swift in Sources */,
+				A10000000000000000000005 /* BrowserViewModel.swift in Sources */,
+				A10000000000000000000006 /* BookmarkModels.swift in Sources */,
+				A10000000000000000000007 /* BookmarksView.swift in Sources */,
+				A10000000000000000000008 /* URLHelpers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

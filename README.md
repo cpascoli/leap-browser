@@ -36,7 +36,7 @@ Requires **Xcode 15+** on a Mac (iOS 17 / macOS 14 SDKs).
 1. Clone this repo and open `LeapBrowser.xcodeproj`
 2. Select the **LeapBrowser** scheme
 3. Pick an **iOS Simulator** or **My Mac**, then Run (⌘R)
-4. You should see https://example.com in a WKWebView
+4. You should see https://www.google.com in a WKWebView
 
 ### Identifiers (placeholders)
 
@@ -49,7 +49,7 @@ CloudKit / iCloud entitlements are **not** enabled yet (Milestone 7).
 
 ## Status
 
-Milestone **0** (docs) and **1** (multiplatform skeleton + WKWebView) are in progress on `main`. Next: Milestone 2 — URL bar and navigation chrome.
+Milestones **0–2** plus local bookmarks/folders are on `main`: URL bar, Google home, Google search for non-URLs, bookmark current page, open and organise bookmarks in folders. Next: tabs / ad blocking / per-domain JS.
 
 ## Licence
 

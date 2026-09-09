@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 @main
@@ -6,5 +7,6 @@ struct LeapBrowserApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: [Bookmark.self, BookmarkFolder.self])
     }
 }

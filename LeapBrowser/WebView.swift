@@ -3,36 +3,94 @@ import WebKit
 
 #if os(iOS)
 struct WebView: UIViewRepresentable {
-    let url: URL
+    @ObservedObject var browser: BrowserViewModel
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(browser: browser)
+    }
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView(frame: .zero, configuration: makeConfiguration())
-        webView.load(URLRequest(url: url))
+        webView.navigationDelegate = context.coordinator
+        webView.allowsBackForwardNavigationGestures = true
+        context.coordinator.observe(webView)
+        browser.attach(webView)
         return webView
     }
 
     func updateUIView(_ webView: WKWebView, context: Context) {
-        // Milestone 1: single hardcoded start URL; navigation chrome arrives in M2.
+        // Navigation is driven by BrowserViewModel, not by SwiftUI updates.
     }
 }
 #elseif os(macOS)
 struct WebView: NSViewRepresentable {
-    let url: URL
+    @ObservedObject var browser: BrowserViewModel
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(browser: browser)
+    }
 
     func makeNSView(context: Context) -> WKWebView {
         let webView = WKWebView(frame: .zero, configuration: makeConfiguration())
-        webView.load(URLRequest(url: url))
+        webView.navigationDelegate = context.coordinator
+        webView.allowsBackForwardNavigationGestures = true
+        context.coordinator.observe(webView)
+        browser.attach(webView)
         return webView
     }
 
     func updateNSView(_ webView: WKWebView, context: Context) {
-        // Milestone 1: single hardcoded start URL; navigation chrome arrives in M2.
+        // Navigation is driven by BrowserViewModel, not by SwiftUI updates.
     }
 }
 #endif
 
+final class Coordinator: NSObject, WKNavigationDelegate {
+    let browser: BrowserViewModel
+    private var observations: [NSKeyValueObservation] = []
+
+    init(browser: BrowserViewModel) {
+        self.browser = browser
+    }
+
+    func observe(_ webView: WKWebView) {
+        observations = [
+            webView.observe(\.canGoBack, options: [.new]) { [weak self] _, _ in
+                Task { @MainActor in self?.browser.refreshNavigationState() }
+            },
+            webView.observe(\.canGoForward, options: [.new]) { [weak self] _, _ in
+                Task { @MainActor in self?.browser.refreshNavigationState() }
+            },
+            webView.observe(\.isLoading, options: [.new]) { [weak self] _, _ in
+                Task { @MainActor in self?.browser.refreshNavigationState() }
+            },
+            webView.observe(\.title, options: [.new]) { [weak self] _, _ in
+                Task { @MainActor in self?.browser.refreshNavigationState() }
+            },
+            webView.observe(\.url, options: [.new]) { [weak self] _, _ in
+                Task { @MainActor in self?.browser.refreshNavigationState() }
+            },
+        ]
+    }
+
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+        Task { @MainActor in browser.refreshNavigationState() }
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        Task { @MainActor in browser.refreshNavigationState() }
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        Task { @MainActor in browser.refreshNavigationState() }
+    }
+
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        Task { @MainActor in browser.refreshNavigationState() }
+    }
+}
+
 private func makeConfiguration() -> WKWebViewConfiguration {
     let configuration = WKWebViewConfiguration()
-    // Milestone 1 placeholder — UA, content blockers, and JS policies land in later milestones.
     return configuration
 }
