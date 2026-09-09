@@ -54,7 +54,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
         switch self {
         case .tokyo: return "Neon on black / grey"
         case .light: return "Bright chrome · sites prefer light"
-        case .hacker: return "VS Code–style dark"
+        case .hacker: return "Black & white · grayscale"
         case .matrix: return "Green terminal rain"
         }
     }
@@ -100,23 +100,23 @@ enum AppTheme: String, CaseIterable, Identifiable {
                 ]
             )
         case .hacker:
-            // VS Code Dark+ inspired
+            // Pure black & white with gray accents
             return ThemePalette(
-                void: Color(red: 0.12, green: 0.12, blue: 0.12),       // #1e1e1e
-                panel: Color(red: 0.15, green: 0.15, blue: 0.15),      // #252526
-                well: Color(red: 0.18, green: 0.18, blue: 0.18),       // #2d2d2d
-                neonPink: Color(red: 0.81, green: 0.57, blue: 0.47),   // #ce9178
-                neonCyan: Color(red: 0.31, green: 0.79, blue: 0.69),   // #4ec9b0
-                neonViolet: Color(red: 0.40, green: 0.65, blue: 0.90), // #569cd6
-                neonAmber: Color(red: 0.86, green: 0.86, blue: 0.67),  // #dcdcaa
-                mist: Color(red: 0.83, green: 0.83, blue: 0.83),       // #d4d4d4
-                alert: Color(red: 0.95, green: 0.28, blue: 0.33),
+                void: Color(red: 0.0, green: 0.0, blue: 0.0),          // #000000
+                panel: Color(red: 0.08, green: 0.08, blue: 0.08),      // #141414
+                well: Color(red: 0.14, green: 0.14, blue: 0.14),       // #242424
+                neonPink: Color(red: 0.55, green: 0.55, blue: 0.55),   // #8c8c8c
+                neonCyan: Color(red: 0.95, green: 0.95, blue: 0.95),   // #f2f2f2 primary
+                neonViolet: Color(red: 0.72, green: 0.72, blue: 0.72), // #b8b8b8
+                neonAmber: Color(red: 0.85, green: 0.85, blue: 0.85),  // #d9d9d9
+                mist: Color(red: 0.45, green: 0.45, blue: 0.45),       // #737373 muted
+                alert: Color(red: 1.0, green: 1.0, blue: 1.0),         // #ffffff
                 preferredColorScheme: .dark,
                 prefersDarkWebContent: true,
                 chromeGradientColors: [
-                    Color(red: 0.12, green: 0.12, blue: 0.12),
-                    Color(red: 0.18, green: 0.18, blue: 0.18),
-                    Color(red: 0.14, green: 0.14, blue: 0.14),
+                    Color(red: 0.0, green: 0.0, blue: 0.0),
+                    Color(red: 0.10, green: 0.10, blue: 0.10),
+                    Color(red: 0.04, green: 0.04, blue: 0.04),
                 ]
             )
         case .matrix:
