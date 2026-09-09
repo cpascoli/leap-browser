@@ -84,13 +84,14 @@ struct WebView: NSViewRepresentable {
 #endif
 
 func applyPreferredDarkAppearance(to webView: WKWebView) {
+    let dark = CyberpunkTheme.prefersDarkWebContent
     #if os(iOS)
-    webView.overrideUserInterfaceStyle = .dark
+    webView.overrideUserInterfaceStyle = dark ? .dark : .light
     if #available(iOS 15.0, *) {
         webView.underPageBackgroundColor = UIColor(CyberpunkTheme.void)
     }
     #elseif os(macOS)
-    webView.appearance = NSAppearance(named: .darkAqua)
+    webView.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
     if #available(macOS 12.0, *) {
         webView.underPageBackgroundColor = NSColor(CyberpunkTheme.void)
     }

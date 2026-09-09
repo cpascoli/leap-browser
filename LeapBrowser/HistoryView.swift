@@ -8,6 +8,8 @@ struct HistoryView: View {
 
     var onOpen: (URL) -> Void
 
+    @ObservedObject private var themeManager = ThemeManager.shared
+
     var body: some View {
         NavigationStack {
             Group {
@@ -75,7 +77,7 @@ struct HistoryView: View {
             .toolbarBackground(CyberpunkTheme.panel, for: .navigationBar)
             #endif
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(themeManager.palette.preferredColorScheme)
         .tint(CyberpunkTheme.neonCyan)
     }
 

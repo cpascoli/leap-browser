@@ -9,6 +9,8 @@ struct TabCarouselView: View {
         GridItem(.flexible(), spacing: 12),
     ]
 
+    @ObservedObject private var themeManager = ThemeManager.shared
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -46,7 +48,7 @@ struct TabCarouselView: View {
             .toolbarBackground(CyberpunkTheme.panel, for: .navigationBar)
             #endif
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(themeManager.palette.preferredColorScheme)
     }
 
     private func tabCard(_ tab: BrowserTab) -> some View {

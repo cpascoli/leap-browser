@@ -4,6 +4,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @ObservedObject private var themeManager = ThemeManager.shared
     @Query private var history: [HistoryEntry]
 
     @State private var showClearHistoryConfirm = false
@@ -11,6 +12,33 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    ForEach(AppTheme.allCases) { theme in
+                        Button {
+                            themeManager.theme = theme
+                        } label: {
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: themeManager.theme == theme ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(themeManager.theme == theme ? CyberpunkTheme.neonCyan : CyberpunkTheme.mist)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(theme.title)
+                                        .font(.system(.body, design: .default).weight(.semibold))
+                                        .foregroundStyle(CyberpunkTheme.neonCyan)
+                                    Text(theme.subtitle)
+                                        .font(.system(.caption, design: .monospaced))
+                                        .foregroundStyle(CyberpunkTheme.mist)
+                                }
+                                Spacer(minLength: 0)
+                            }
+                        }
+                        .listRowBackground(CyberpunkTheme.panel)
+                    }
+                } header: {
+                    Text("THEME")
+                        .font(.system(.caption2, design: .monospaced).weight(.bold))
+                        .foregroundStyle(CyberpunkTheme.mist)
+                }
+
                 Section {
                     LabeledContent("Home") {
                         Text("google.com")
@@ -23,7 +51,7 @@ struct SettingsView: View {
                             .foregroundStyle(CyberpunkTheme.neonCyan)
                     }
                     LabeledContent("Site theme") {
-                        Text("Prefer dark")
+                        Text(themeManager.palette.prefersDarkWebContent ? "Prefer dark" : "Prefer light")
                             .font(.system(.caption, design: .monospaced))
                             .foregroundStyle(CyberpunkTheme.neonAmber)
                     }
@@ -103,7 +131,7 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) {}
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(themeManager.palette.preferredColorScheme)
         .tint(CyberpunkTheme.neonCyan)
     }
 }

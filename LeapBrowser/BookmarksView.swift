@@ -18,6 +18,8 @@ struct BookmarksView: View {
     @State private var bookmarkPendingMove: Bookmark?
     @State private var showingMoveSheet = false
 
+    @ObservedObject private var themeManager = ThemeManager.shared
+
     var body: some View {
         NavigationStack {
             List {
@@ -126,10 +128,10 @@ struct BookmarksView: View {
                         showingMoveSheet = false
                     }
                 )
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(themeManager.palette.preferredColorScheme)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(themeManager.palette.preferredColorScheme)
         .tint(CyberpunkTheme.neonCyan)
     }
 
@@ -228,6 +230,6 @@ private struct MoveBookmarkSheet: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(themeManager.palette.preferredColorScheme)
     }
 }

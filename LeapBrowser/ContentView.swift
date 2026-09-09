@@ -7,6 +7,7 @@ struct ContentView: View {
     @Query(filter: #Predicate<Bookmark> { $0.folder == nil }, sort: \Bookmark.sortIndex)
     private var rootBookmarks: [Bookmark]
 
+    @EnvironmentObject private var themeManager: ThemeManager
     @StateObject private var tabManager = TabManager()
     @StateObject private var chrome = ChromeState()
     @State private var showBookmarks = false
@@ -49,7 +50,7 @@ struct ContentView: View {
             .animation(.easeInOut(duration: 0.22), value: chrome.isVisible)
         }
         .background(CyberpunkTheme.void.ignoresSafeArea())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(themeManager.palette.preferredColorScheme)
         .onAppear { wireHistoryHandlers() }
         .onChange(of: tabManager.selectedTabID) { _, _ in
             wireHistoryHandlers()
@@ -72,24 +73,24 @@ struct ContentView: View {
                 }
             )
             .presentationDetents([.medium, .large])
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(themeManager.palette.preferredColorScheme)
         }
         .sheet(isPresented: $showHistory) {
             HistoryView { url in
                 browser.load(url)
             }
             .presentationDetents([.medium, .large])
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(themeManager.palette.preferredColorScheme)
         }
         .sheet(isPresented: $showSettings) {
             SettingsView()
                 .presentationDetents([.medium, .large])
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(themeManager.palette.preferredColorScheme)
         }
         .sheet(isPresented: $showTabCarousel) {
             TabCarouselView(tabManager: tabManager)
                 .presentationDetents([.medium, .large])
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(themeManager.palette.preferredColorScheme)
         }
         .confirmationDialog("SAVE TO NODE…", isPresented: $showFolderPicker, titleVisibility: .visible) {
             Button("ROOT // NO FOLDER") {
@@ -284,5 +285,6 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(ThemeManager.shared)
         .modelContainer(for: [Bookmark.self, BookmarkFolder.self, HistoryEntry.self], inMemory: true)
 }
