@@ -41,3 +41,24 @@ final class Bookmark {
         URL(string: urlString)
     }
 }
+
+@Model
+final class HistoryEntry {
+    var id: UUID
+    var title: String
+    var urlString: String
+    var visitedAt: Date
+    var visitCount: Int
+
+    init(title: String, urlString: String, visitedAt: Date = Date(), visitCount: Int = 1) {
+        self.id = UUID()
+        self.title = title
+        self.urlString = urlString
+        self.visitedAt = visitedAt
+        self.visitCount = visitCount
+    }
+
+    var url: URL? {
+        URL(string: urlString)
+    }
+}

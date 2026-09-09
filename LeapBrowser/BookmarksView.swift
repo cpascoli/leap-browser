@@ -9,6 +9,9 @@ struct BookmarksView: View {
     private var rootBookmarks: [Bookmark]
 
     var onOpen: (URL) -> Void
+    var currentPageTitle: String = ""
+    var currentPageURL: URL? = nil
+    var onBookmarkCurrent: (() -> Void)? = nil
 
     @State private var newFolderName = ""
     @State private var showingNewFolder = false
@@ -72,7 +75,15 @@ struct BookmarksView: View {
                         .font(.system(.caption, design: .monospaced).weight(.bold))
                         .foregroundStyle(CyberpunkTheme.neonCyan)
                 }
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    if onBookmarkCurrent != nil, currentPageURL != nil {
+                        Button {
+                            onBookmarkCurrent?()
+                        } label: {
+                            Label("Bookmark Page", systemImage: "bookmark.fill")
+                                .foregroundStyle(CyberpunkTheme.neonViolet)
+                        }
+                    }
                     Button {
                         showingNewFolder = true
                     } label: {

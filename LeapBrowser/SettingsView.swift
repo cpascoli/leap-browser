@@ -1,0 +1,104 @@
+import SwiftData
+import SwiftUI
+
+struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @Query private var history: [HistoryEntry]
+
+    @State private var showClearHistoryConfirm = false
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    LabeledContent("Home") {
+                        Text("google.com")
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(CyberpunkTheme.neonCyan)
+                    }
+                    LabeledContent("Search") {
+                        Text("Google")
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(CyberpunkTheme.neonCyan)
+                    }
+                    LabeledContent("Site theme") {
+                        Text("Prefer dark")
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(CyberpunkTheme.neonAmber)
+                    }
+                } header: {
+                    Text("NAVIGATION")
+                        .font(.system(.caption2, design: .monospaced).weight(.bold))
+                        .foregroundStyle(CyberpunkTheme.mist)
+                }
+                .listRowBackground(CyberpunkTheme.panel)
+
+                Section {
+                    Button(role: .destructive) {
+                        showClearHistoryConfirm = true
+                    } label: {
+                        HStack {
+                            Text("Clear browsing history")
+                            Spacer()
+                            Text("\(history.count)")
+                                .font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(CyberpunkTheme.mist)
+                        }
+                    }
+                    .disabled(history.isEmpty)
+                } header: {
+                    Text("DATA")
+                        .font(.system(.caption2, design: .monospaced).weight(.bold))
+                        .foregroundStyle(CyberpunkTheme.mist)
+                }
+                .listRowBackground(CyberpunkTheme.panel)
+
+                Section {
+                    LabeledContent("App") {
+                        Text("Leap Browser")
+                            .font(.system(.caption, design: .monospaced))
+                    }
+                    LabeledContent("Build") {
+                        Text("0.1.0 · Neo-Tōkyō 2226")
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(CyberpunkTheme.mist)
+                    }
+                } header: {
+                    Text("ABOUT")
+                        .font(.system(.caption2, design: .monospaced).weight(.bold))
+                        .foregroundStyle(CyberpunkTheme.mist)
+                }
+                .listRowBackground(CyberpunkTheme.panel)
+            }
+            #if os(iOS)
+            .scrollContentBackground(.hidden)
+            #endif
+            .background(CyberpunkTheme.void.ignoresSafeArea())
+            .navigationTitle("SETTINGS")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("CLOSE") { dismiss() }
+                        .font(.system(.caption, design: .monospaced).weight(.bold))
+                        .foregroundStyle(CyberpunkTheme.neonCyan)
+                }
+            }
+            #if os(iOS)
+            .toolbarBackground(CyberpunkTheme.panel, for: .navigationBar)
+            #endif
+            .confirmationDialog("Clear all history?", isPresented: $showClearHistoryConfirm, titleVisibility: .visible) {
+                Button("Clear history", role: .destructive) {
+                    for entry in history {
+                        modelContext.delete(entry)
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            }
+        }
+        .preferredColorScheme(.dark)
+        .tint(CyberpunkTheme.neonCyan)
+    }
+}

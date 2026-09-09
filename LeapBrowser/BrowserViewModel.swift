@@ -11,6 +11,9 @@ final class BrowserViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var currentURL: URL = URLHelpers.homeURL
 
+    /// Fired when a navigation finishes with a usable URL (for history logging).
+    var onPageCommitted: ((URL, String) -> Void)?
+
     weak var webView: WKWebView?
 
     func attach(_ webView: WKWebView) {
@@ -59,5 +62,14 @@ final class BrowserViewModel: ObservableObject {
         if let title = webView?.title, !title.isEmpty {
             pageTitle = title
         }
+    }
+
+    func notifyPageCommitted() {
+        guard let url = webView?.url else { return }
+        let title = (webView?.title?.isEmpty == false ? webView?.title : nil) ?? url.host ?? url.absoluteString
+        currentURL = url
+        pageTitle = title
+        addressText = url.absoluteString
+        onPageCommitted?(url, title)
     }
 }
