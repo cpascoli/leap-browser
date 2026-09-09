@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FF95EE07FA5C469EAF5B869F /* GoogleAdHiding.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21E2E39A6E543D597220927 /* GoogleAdHiding.swift */; };
 		A10000000000000000000001 /* LeapBrowserApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* LeapBrowserApp.swift */; };
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* ContentView.swift */; };
 		A10000000000000000000003 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* WebView.swift */; };
@@ -27,6 +28,7 @@
 /* Begin PBXFileReference section */
 		A20000000000000000000001 /* LeapBrowserApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeapBrowserApp.swift; sourceTree = "<group>"; };
 		A20000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B21E2E39A6E543D597220927 /* GoogleAdHiding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleAdHiding.swift; sourceTree = "<group>"; };
 		A20000000000000000000003 /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
 		A20000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000005 /* BrowserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserViewModel.swift; sourceTree = "<group>"; };
@@ -68,6 +70,7 @@
 				A20000000000000000000001 /* LeapBrowserApp.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
 				A20000000000000000000003 /* WebView.swift */,
+				B21E2E39A6E543D597220927 /* GoogleAdHiding.swift */,
 				A20000000000000000000005 /* BrowserViewModel.swift */,
 				A20000000000000000000006 /* BookmarkModels.swift */,
 				A20000000000000000000007 /* BookmarksView.swift */,
@@ -164,6 +167,7 @@
 				A10000000000000000000001 /* LeapBrowserApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* WebView.swift in Sources */,
+				FF95EE07FA5C469EAF5B869F /* GoogleAdHiding.swift in Sources */,
 				A10000000000000000000005 /* BrowserViewModel.swift in Sources */,
 				A10000000000000000000006 /* BookmarkModels.swift in Sources */,
 				A10000000000000000000007 /* BookmarksView.swift in Sources */,
