@@ -377,5 +377,6 @@ private func makeConfiguration(coordinator: Coordinator) -> WKWebViewConfigurati
     })();
     """
     contentController.addUserScript(WKUserScript(source: js, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
+    contentController.addUserScript(GoogleAdHiding.makeUserScript())
     return configuration
 }
