@@ -3,7 +3,7 @@ import SwiftUI
 
 @main
 struct LeapBrowserApp: App {
-    @StateObject private var themeManager = ThemeManager.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
 
     init() {
         LanguagePreferences.applyAtLaunch()
@@ -14,7 +14,7 @@ struct LeapBrowserApp: App {
             ContentView()
                 .environmentObject(themeManager)
                 .preferredColorScheme(themeManager.palette.preferredColorScheme)
-                .id(themeManager.theme) // force chrome refresh on theme change
+                .id(themeManager.theme)
         }
         .modelContainer(for: [Bookmark.self, BookmarkFolder.self, HistoryEntry.self])
     }

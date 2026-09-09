@@ -1,7 +1,6 @@
 import Combine
 import Foundation
 
-@MainActor
 final class ChromeState: ObservableObject {
     @Published private(set) var isVisible: Bool = true
 

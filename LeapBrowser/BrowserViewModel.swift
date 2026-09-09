@@ -2,7 +2,6 @@ import Combine
 import Foundation
 import WebKit
 
-@MainActor
 final class BrowserViewModel: ObservableObject {
     @Published var addressText: String = URLHelpers.homeURL.absoluteString
     @Published var pageTitle: String = "Leap Browser"

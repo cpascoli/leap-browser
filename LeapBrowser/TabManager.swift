@@ -2,7 +2,6 @@ import Combine
 import Foundation
 import SwiftUI
 
-@MainActor
 final class BrowserTab: ObservableObject, Identifiable {
     let id: UUID
     let browser: BrowserViewModel
@@ -25,7 +24,6 @@ final class BrowserTab: ObservableObject, Identifiable {
     }
 }
 
-@MainActor
 final class TabManager: ObservableObject {
     @Published private(set) var tabs: [BrowserTab]
     @Published var selectedTabID: UUID
