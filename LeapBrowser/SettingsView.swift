@@ -28,7 +28,7 @@ struct SettingsView: View {
                             .foregroundStyle(CyberpunkTheme.neonAmber)
                     }
                     LabeledContent("Languages") {
-                        Text("en-GB → en → th")
+                        Text("en-GB → en → it → th")
                             .font(.system(.caption, design: .monospaced))
                             .foregroundStyle(CyberpunkTheme.neonPink)
                     }
