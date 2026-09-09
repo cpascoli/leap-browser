@@ -24,6 +24,7 @@ struct WebView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView(frame: .zero, configuration: makeConfiguration(coordinator: context.coordinator))
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = false
         webView.scrollView.delegate = context.coordinator
         webView.scrollView.alwaysBounceVertical = true
@@ -63,6 +64,7 @@ struct WebView: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let webView = WKWebView(frame: .zero, configuration: makeConfiguration(coordinator: context.coordinator))
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = false
         applyPreferredDarkAppearance(to: webView)
         context.coordinator.observe(webView)
@@ -98,7 +100,7 @@ func applyPreferredDarkAppearance(to webView: WKWebView) {
     #endif
 }
 
-final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
     var browser: BrowserViewModel
     var onSwipeToNextTab: (() -> Void)?
     var onSwipeToPreviousTab: (() -> Void)?
@@ -198,6 +200,66 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler 
         }
     }
 
+    // Keep navigations inside Leap — do not hand off to YouTube / Maps / etc.
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction,
+        decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+    ) {
+        guard let url = navigationAction.request.url else {
+            decisionHandler(.allow)
+            return
+        }
+
+        let scheme = (url.scheme ?? "").lowercased()
+
+        if ["about", "data", "blob"].contains(scheme) {
+            decisionHandler(.allow)
+            return
+        }
+
+        // App / deep-link schemes (youtube://, vnd.youtube, etc.) — stay on the web when possible.
+        if scheme != "http", scheme != "https" {
+            decisionHandler(.cancel)
+            if let httpsURL = InAppNavigation.httpsFallback(for: url) {
+                Task { @MainActor in browser.load(httpsURL) }
+            }
+            return
+        }
+
+        // User taps and target=_blank / window.open: load in this web view so Universal Links
+        // (YouTube app, etc.) are not invoked.
+        let isUserLink = navigationAction.navigationType == .linkActivated
+        let opensNewWindow = navigationAction.targetFrame == nil
+        if isUserLink || opensNewWindow {
+            decisionHandler(.cancel)
+            var request = navigationAction.request
+            LanguagePreferences.apply(to: &request)
+            webView.load(request)
+            return
+        }
+
+        // Prefer WebKit's "allow without app links" when available (same idea as Firefox iOS),
+        // so http(s) redirects also stay in Leap instead of opening YouTube/Maps/etc.
+        decisionHandler(InAppNavigation.stayInBrowserPolicy)
+    }
+
+    func webView(
+        _ webView: WKWebView,
+        createWebViewWith configuration: WKWebViewConfiguration,
+        for navigationAction: WKNavigationAction,
+        windowFeatures: WKWindowFeatures
+    ) -> WKWebView? {
+        // window.open / target=_blank — same tab, never a system browser or app.
+        if let url = navigationAction.request.url,
+           ["http", "https"].contains((url.scheme ?? "").lowercased()) {
+            var request = navigationAction.request
+            LanguagePreferences.apply(to: &request)
+            webView.load(request)
+        }
+        return nil
+    }
+
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         Task { @MainActor in browser.refreshNavigationState() }
     }
@@ -241,6 +303,55 @@ extension Coordinator: UIGestureRecognizerDelegate {
     }
 }
 #endif
+
+
+enum InAppNavigation {
+    /// WKNavigationActionPolicy.allow + 2 ≈ allow without trying Universal Links (WebKit).
+    static var stayInBrowserPolicy: WKNavigationActionPolicy {
+        #if os(iOS)
+        WKNavigationActionPolicy(rawValue: WKNavigationActionPolicy.allow.rawValue + 2) ?? .allow
+        #else
+        .allow
+        #endif
+    }
+
+    /// Map known app deep links back to https so they stay in WKWebView.
+    static func httpsFallback(for url: URL) -> URL? {
+        let scheme = (url.scheme ?? "").lowercased()
+        let host = (url.host ?? "").lowercased()
+        let path = url.path
+        let query = url.query.map { "?\($0)" } ?? ""
+
+        switch scheme {
+        case "youtube", "youtube-tv", "youtube-studio":
+            // youtube://www.youtube.com/watch?v=… or youtube://watch?v=…
+            if host.contains("youtube") || host == "youtu.be" {
+                return URL(string: "https://\(host)\(path)\(query)")
+            }
+            if path.hasPrefix("/watch") || path.hasPrefix("/shorts") || path.hasPrefix("/embed") {
+                return URL(string: "https://www.youtube.com\(path)\(query)")
+            }
+            if let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
+               let v = items.first(where: { $0.name == "v" })?.value {
+                return URL(string: "https://www.youtube.com/watch?v=\(v)")
+            }
+            return URL(string: "https://www.youtube.com\(path.isEmpty ? "/" : path)\(query)")
+        case "vnd.youtube":
+            // vnd.youtube://VIDEO_ID or vnd.youtube://www.youtube.com/...
+            if host.contains("youtube") {
+                return URL(string: "https://\(host)\(path)\(query)")
+            }
+            if !host.isEmpty, path.isEmpty || path == "/" {
+                return URL(string: "https://www.youtube.com/watch?v=\(host)")
+            }
+            return URL(string: "https://www.youtube.com\(path)\(query)")
+        case "googlevideo", "youtube-music":
+            return URL(string: "https://music.youtube.com\(path)\(query)")
+        default:
+            return nil
+        }
+    }
+}
 
 private func makeConfiguration(coordinator: Coordinator) -> WKWebViewConfiguration {
     let configuration = WKWebViewConfiguration()
