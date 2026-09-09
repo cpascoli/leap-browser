@@ -31,6 +31,7 @@ struct WebView: UIViewRepresentable {
         applyPreferredDarkAppearance(to: webView)
         context.coordinator.observe(webView)
         context.coordinator.installTabSwipe(on: webView)
+        context.coordinator.installPullToRefresh(on: webView)
         browser.attach(webView)
         return webView
     }
@@ -109,6 +110,7 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
     private var observations: [NSKeyValueObservation] = []
     #if os(iOS)
     private weak var pan: UIPanGestureRecognizer?
+    private weak var refreshControl: UIRefreshControl?
     #endif
 
     init(
@@ -133,7 +135,15 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
             webView.observe(\.canGoForward, options: [.new]) { [weak self] _, _ in
                 Task { @MainActor in self?.browser.refreshNavigationState() }
             },
-            webView.observe(\.isLoading, options: [.new]) { [weak self] _, _ in
+            webView.observe(\.isLoading, options: [.new]) { [weak self] webView, _ in
+                Task { @MainActor in
+                    self?.browser.refreshNavigationState()
+                    if !webView.isLoading {
+                        self?.endRefreshing()
+                    }
+                }
+            },
+            webView.observe(\.estimatedProgress, options: [.new]) { [weak self] _, _ in
                 Task { @MainActor in self?.browser.refreshNavigationState() }
             },
             webView.observe(\.title, options: [.new]) { [weak self] _, _ in
@@ -144,6 +154,27 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
             },
         ]
     }
+
+    #if os(iOS)
+    func installPullToRefresh(on webView: WKWebView) {
+        let refresh = UIRefreshControl()
+        refresh.tintColor = UIColor(CyberpunkTheme.neonCyan)
+        refresh.addTarget(self, action: #selector(handlePullToRefresh), for: .valueChanged)
+        webView.scrollView.refreshControl = refresh
+        refreshControl = refresh
+    }
+
+    @objc private func handlePullToRefresh() {
+        browser.reload()
+    }
+
+    private func endRefreshing() {
+        guard let refreshControl, refreshControl.isRefreshing else { return }
+        refreshControl.endRefreshing()
+    }
+    #else
+    private func endRefreshing() {}
+    #endif
 
     #if os(iOS)
     func installTabSwipe(on webView: WKWebView) {
@@ -227,18 +258,8 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
             return
         }
 
-        // Only rewrite *main-frame link taps*. Treating targetFrame == nil as "new window"
-        // was canceling normal loads/redirects and pages never finished.
-        // target=_blank / window.open are handled in createWebViewWith below.
-        if navigationAction.navigationType == .linkActivated,
-           navigationAction.targetFrame?.isMainFrame == true {
-            decisionHandler(.cancel)
-            var request = navigationAction.request
-            LanguagePreferences.apply(to: &request)
-            webView.load(request)
-            return
-        }
-
+        // Always allow http(s). Rewriting/canceling main-frame loads caused blank pages.
+        // target=_blank is handled in createWebViewWith.
         decisionHandler(.allow)
     }
 
@@ -266,15 +287,22 @@ final class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
         Task { @MainActor in
             browser.refreshNavigationState()
             browser.notifyPageCommitted()
+            endRefreshing()
         }
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        Task { @MainActor in browser.refreshNavigationState() }
+        Task { @MainActor in
+            browser.refreshNavigationState()
+            endRefreshing()
+        }
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        Task { @MainActor in browser.refreshNavigationState() }
+        Task { @MainActor in
+            browser.refreshNavigationState()
+            endRefreshing()
+        }
     }
 }
 

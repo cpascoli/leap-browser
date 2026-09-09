@@ -27,6 +27,7 @@ final class BrowserTab: ObservableObject, Identifiable {
 final class TabManager: ObservableObject {
     @Published private(set) var tabs: [BrowserTab]
     @Published var selectedTabID: UUID
+    private var tabCancellables = Set<AnyCancellable>()
 
     var selectedTab: BrowserTab {
         tabs.first(where: { $0.id == selectedTabID }) ?? tabs[0]
@@ -40,12 +41,14 @@ final class TabManager: ObservableObject {
         let first = BrowserTab()
         self.tabs = [first]
         self.selectedTabID = first.id
+        bindTabUpdates()
     }
 
     @discardableResult
     func addTab(startURL: URL = URLHelpers.homeURL, select: Bool = true) -> BrowserTab {
         let tab = BrowserTab(startURL: startURL)
         tabs.append(tab)
+        bindTabUpdates()
         if select {
             selectedTabID = tab.id
         }
@@ -56,6 +59,7 @@ final class TabManager: ObservableObject {
         guard tabs.count > 1, let index = tabs.firstIndex(where: { $0.id == id }) else { return }
         let wasSelected = selectedTabID == id
         tabs.remove(at: index)
+        bindTabUpdates()
         if wasSelected {
             let newIndex = min(index, tabs.count - 1)
             selectedTabID = tabs[newIndex].id
@@ -77,5 +81,17 @@ final class TabManager: ObservableObject {
         guard tabs.count > 1 else { return }
         let prev = (selectedIndex - 1 + tabs.count) % tabs.count
         selectedTabID = tabs[prev].id
+    }
+
+    /// So ContentView re-renders when the active page's isLoading / progress changes.
+    private func bindTabUpdates() {
+        tabCancellables.removeAll()
+        for tab in tabs {
+            tab.objectWillChange
+                .sink { [weak self] _ in
+                    self?.objectWillChange.send()
+                }
+                .store(in: &tabCancellables)
+        }
     }
 }

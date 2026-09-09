@@ -8,6 +8,7 @@ final class BrowserViewModel: ObservableObject {
     @Published var canGoBack: Bool = false
     @Published var canGoForward: Bool = false
     @Published var isLoading: Bool = false
+    @Published var estimatedProgress: Double = 0
     @Published var currentURL: URL = URLHelpers.homeURL
 
     /// Fired when a navigation finishes with a usable URL (for history logging).
@@ -56,6 +57,7 @@ final class BrowserViewModel: ObservableObject {
         canGoBack = webView?.canGoBack ?? false
         canGoForward = webView?.canGoForward ?? false
         isLoading = webView?.isLoading ?? false
+        estimatedProgress = webView?.estimatedProgress ?? 0
         if let url = webView?.url {
             currentURL = url
             addressText = url.absoluteString

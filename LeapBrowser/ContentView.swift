@@ -85,12 +85,17 @@ struct ContentView: View {
             loadingPulse
                 .transition(.opacity)
         } else {
-            Color.clear
-                .frame(height: 12)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    withAnimation(.easeInOut(duration: 0.22)) { chrome.reveal() }
+            VStack(spacing: 0) {
+                Color.clear
+                    .frame(height: 12)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.22)) { chrome.reveal() }
+                    }
+                if browser.isLoading {
+                    loadingPulse
                 }
+            }
         }
     }
 
@@ -203,18 +208,24 @@ struct ContentView: View {
     }
 
     private var loadingPulse: some View {
-        ZStack(alignment: .leading) {
-            Rectangle()
-                .fill(CyberpunkTheme.panel)
-                .frame(height: 2)
-            if browser.isLoading {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
                 Rectangle()
-                    .fill(CyberpunkTheme.auraGradient)
-                    .frame(height: 2)
-                    .shadow(color: CyberpunkTheme.neonCyan.opacity(0.8), radius: 4)
+                    .fill(CyberpunkTheme.panel.opacity(0.9))
+                if browser.isLoading {
+                    let width = max(geo.size.width * CGFloat(max(browser.estimatedProgress, 0.08)), 24)
+                    Rectangle()
+                        .fill(CyberpunkTheme.auraGradient)
+                        .frame(width: width)
+                        .shadow(color: CyberpunkTheme.neonCyan.opacity(0.85), radius: 5)
+                        .animation(.easeInOut(duration: 0.18), value: browser.estimatedProgress)
+                }
             }
         }
-        .frame(height: 2)
+        .frame(height: 3)
+        .opacity(browser.isLoading ? 1 : 0)
+        .animation(.easeInOut(duration: 0.2), value: browser.isLoading)
+        .accessibilityLabel(browser.isLoading ? "Loading" : "Idle")
     }
 
     private func wireHistoryHandlers() {
