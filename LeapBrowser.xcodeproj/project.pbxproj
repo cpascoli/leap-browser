@@ -17,6 +17,7 @@
 		A10000000000000000000009 /* CyberpunkTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* CyberpunkTheme.swift */; };
 		A1000000000000000000000A /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000A /* HistoryView.swift */; };
 		A1000000000000000000000B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000B /* SettingsView.swift */; };
+		A1000000000000000000000C /* LanguagePreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* LanguagePreferences.swift */; };
 		A10000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -31,6 +32,7 @@
 		A20000000000000000000009 /* CyberpunkTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyberpunkTheme.swift; sourceTree = "<group>"; };
 		A2000000000000000000000A /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		A2000000000000000000000B /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A2000000000000000000000C /* LanguagePreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguagePreferences.swift; sourceTree = "<group>"; };
 		A20000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000010 /* LeapBrowser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LeapBrowser.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -67,6 +69,7 @@
 				A20000000000000000000009 /* CyberpunkTheme.swift */,
 				A2000000000000000000000A /* HistoryView.swift */,
 				A2000000000000000000000B /* SettingsView.swift */,
+				A2000000000000000000000C /* LanguagePreferences.swift */,
 				A20000000000000000000004 /* Assets.xcassets */,
 			);
 			path = LeapBrowser;
@@ -159,6 +162,7 @@
 				A10000000000000000000009 /* CyberpunkTheme.swift in Sources */,
 				A1000000000000000000000A /* HistoryView.swift in Sources */,
 				A1000000000000000000000B /* SettingsView.swift in Sources */,
+				A1000000000000000000000C /* LanguagePreferences.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

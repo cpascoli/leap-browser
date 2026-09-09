@@ -91,7 +91,7 @@ struct ContentView: View {
                     .font(.system(.caption, design: .monospaced).weight(.heavy))
                     .foregroundStyle(CyberpunkTheme.auraGradient)
                     .shadow(color: CyberpunkTheme.neonPink.opacity(0.6), radius: 8)
-                Text("NEO-TŌKYŌ")
+                Text("NEO-TŌKYŌ NET · 2226")
                     .font(.system(size: 9, weight: .semibold, design: .monospaced))
                     .foregroundStyle(CyberpunkTheme.mist.opacity(0.8))
             }

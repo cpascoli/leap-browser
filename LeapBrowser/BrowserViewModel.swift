@@ -32,7 +32,9 @@ final class BrowserViewModel: ObservableObject {
     func load(_ url: URL) {
         currentURL = url
         addressText = url.absoluteString
-        webView?.load(URLRequest(url: url))
+        var request = URLRequest(url: url)
+        LanguagePreferences.apply(to: &request)
+        webView?.load(request)
     }
 
     func goHome() {

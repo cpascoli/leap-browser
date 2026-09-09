@@ -27,6 +27,11 @@ struct SettingsView: View {
                             .font(.system(.caption, design: .monospaced))
                             .foregroundStyle(CyberpunkTheme.neonAmber)
                     }
+                    LabeledContent("Languages") {
+                        Text("en-GB → en → th")
+                            .font(.system(.caption, design: .monospaced))
+                            .foregroundStyle(CyberpunkTheme.neonPink)
+                    }
                 } header: {
                     Text("NAVIGATION")
                         .font(.system(.caption2, design: .monospaced).weight(.bold))
